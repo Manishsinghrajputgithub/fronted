@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 
 const DepositTransaction = () => {
-  const [selectedGames, setSelectedGames] = useState([]);
-
   const [depositData, setDepositData] = useState([]);
   const [search, setSearch] = useState('');
   const [newGame, setNewGame] = useState({
@@ -18,8 +15,8 @@ const DepositTransaction = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedGameId, setSelectedGameId] = useState(null);
   const [gameOptions, setGameOptions] = useState([]);
-
-  // Fetch game list from API
+  
+//https://mern-project1-sxvr.onrender.com/app/gameentities
   useEffect(() => {
     const fetchGameList = async () => {
       try {
@@ -27,10 +24,6 @@ const DepositTransaction = () => {
         const result = await response.json();
         if (result.status === 'SUCCESS') {
           setDepositData(result.data);
-          if (result.data && result.data.gamelistids) {
-            setSelectedGames(result.data.gamelistids);
-          }
-          //console.log(result.data.gamelistids);
         } else {
           console.error('Failed to fetch game list');
         }
@@ -42,30 +35,6 @@ const DepositTransaction = () => {
     fetchGameList();
   }, []);
 
-  const handleSelectChange = (e) => {
-    
-    const options = e.target.options;
-    const selectedValues = [];
-    for (let i = 0; i < options.length; i++) {
-      if (options[i].selected) {
-        selectedValues.push(options[i].value);
-      }
-    }
-    setSelectedGames(selectedValues);
-    console.log(selectedGames)
-  };
-
-  const handleGamesSubmit = async () => {
-    try {
-      const response = await axios.post(`https://mern-project1-sxvr.onrender.com/saveGameSelection/${selectedGameId}`, {
-        gamelistids: selectedGames,
-      });
-      console.log(response.data.message);
-    } catch (error) {
-      console.error('Error saving game selection:', error);
-    }
-  };
-  // Save new or edited game
   const handleSaveGame = async () => {
     try {
       const url = isEditing
@@ -101,7 +70,6 @@ const DepositTransaction = () => {
     }
   };
 
-  // Handle edit of game
   const handleEditGame = (game) => {
     setNewGame(game);
     setIsFormVisible(true);
@@ -109,7 +77,7 @@ const DepositTransaction = () => {
     setCurrentGameId(game._id);
   };
 
-  // Handle status update
+  
   const handleStatus = async (id) => {
     if (window.confirm('Are you sure you want to update this status?')) {
       try {
@@ -130,7 +98,6 @@ const DepositTransaction = () => {
     }
   };
 
-  // Handle delete game
   const handleDeleteGame = async (id) => {
     if (window.confirm('Are you sure you want to delete this game?')) {
       try {
@@ -151,36 +118,28 @@ const DepositTransaction = () => {
     }
   };
 
-  // Close modal
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedGameId(null);
   };
 
-  // Handle games for selection in modal
- // Handle games for selection in modal
- const handleGames = async (id) => {
-  setSelectedGameId(id);
-  setIsModalOpen(true);
+  const handleGames = async (id) => {
+    setSelectedGameId(id);
+    setIsModalOpen(true);
 
-  // Fetch game options
-  try {
-    const response = await fetch('https://mern-project1-sxvr.onrender.com/gameentities');
-    const result = await response.json();
-    console.log('Fetched game options:', result);
-
-    if (result.status === 'SUCCESS' && Array.isArray(result.data)) {
-      // Filter games by uid if needed, otherwise display all
-      setGameOptions(result.data);  // This stores all the game options in state
-    } else {
-      console.error('Failed to fetch game options or incorrect data structure');
+    // Fetch game options for the selection list
+    try {
+      const response = await fetch('https://mern-project1-sxvr.onrender.com/app/gameentities');
+      const result = await response.json();
+      if (result.success === 'true') {
+        setGameOptions(result.data);
+      } else {
+        console.error('Failed to fetch game options');
+      }
+    } catch (error) {
+      console.error('Error fetching game options:', error);
     }
-  } catch (error) {
-    console.error('Error fetching game options:', error);
-  }
-};
-
-
+  };
 
   return (
     <div className="p-6 bg-gray-100">
@@ -277,88 +236,31 @@ const DepositTransaction = () => {
                   <td className="p-3 border-b">{game.gameclubname}</td>
                   <td className="p-3 border-b">{game.opentime}</td>
                   <td className="p-3 border-b">{game.closetime}</td>
-                  <td className="p-3 border-b">
-                    <button
-                      onClick={() => handleGames(game._id)}
-                      className="bg-blue-500 text-white px-3 py-1 rounded"
-                    >
-                      Game List
-                    </button>
-                  </td>
-                  <td className="p-3 border-b">
-                    <button
-                      onClick={() => handleStatus(game._id)}
-                      className={`px-4 py-2 rounded ${
-                        game.status === 'true' ? 'bg-green-500' : 'bg-red-500'
-                      }`}
-                    >
-                     {game.status==="true"?"active":"inActive"}
-                    </button>
-                  </td>
-                  <td className="p-3 border-b">
-                    <button
-                      onClick={() => handleEditGame(game)}
-                      className="bg-yellow-500 text-white px-3 py-1 rounded"
-                    >
-                      Edit
-                    </button>
-                  </td>
-                  <td className="p-3 border-b">
-                    <button
-                      onClick={() => handleDeleteGame(game._id)}
-                      className="bg-red-500 text-white px-3 py-1 rounded"
-                    >
-                      Delete
-                    </button>
-                  </td>
+                  <td className="p-3 border-b text-blue-500 cursor-pointer" onClick={() => handleGames(game._id)}>Games</td>
+                  <td className="p-3 border-b text-blue-500 cursor-pointer" onClick={() => handleStatus(game._id)}>{game.status=="true"?"active":"inActive"}</td>
+                  <td className="p-3 border-b text-blue-500 cursor-pointer" onClick={() => handleEditGame(game)}>Edit Game</td>
+                  <td className="p-3 border-b text-red-500 cursor-pointer" onClick={() => handleDeleteGame(game._id)}>Delete</td>
                 </tr>
               ))}
           </tbody>
         </table>
       </div>
 
-      {/* Modal for games */}
-     {/* Modal for games */}
-{isModalOpen && (
-  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-    <div className="bg-white p-6 rounded shadow-md max-w-md w-full">
-      <h3 className="text-xl font-semibold mb-4">Select Game</h3>
-      
-      {/* Add a fallback message if there are no game options */}
-      {gameOptions.length === 0 ? (
-  <p>No games available. Please check again later.</p>
-) : (
-  <div>
-      <select
-        multiple
-        className="border border-gray-300 p-2 w-full"
-        onChange={handleSelectChange}
-        value={selectedGames} 
-      >
-        <option value="">Select a Game</option>
-        {gameOptions.map((game) => (
-          <option key={game.uid} value={game.uid}>
-            {game.gamename}
-          </option>
-        ))}
-      </select>
-      <button onClick={handleGamesSubmit} className="bg-green-500 p-2 text-white mt-2">
-        Submit
-      </button>
-    </div>
-)}
-
-
-      <button
-        onClick={closeModal}
-        className="mt-4 bg-red-500 text-white px-4 py-2 rounded"
-      >
-        Close
-      </button>
-    </div>
-  </div>
-)}
-
+      {/* Modal for Game Selection */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center">
+          <div className="bg-white p-6 rounded shadow-lg">
+            <h3 className="text-lg font-semibold mb-4">Select Game </h3>
+            <select className="border border-gray-300 rounded px-3 py-2 w-full mb-4">
+              {gameOptions.map((option) => (
+                <option key={option.id} value={option.name}>{option.name}</option>
+              ))}
+            </select>
+            <button className="bg-blue-500 text-white px-4 py-2 rounded mr-2" onClick={closeModal}>Close</button>
+            <button className="bg-green-500 text-white px-4 py-2 rounded">Submit</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
